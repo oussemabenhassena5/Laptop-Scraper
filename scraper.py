@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -353,6 +354,68 @@ class TunisiaNetScraper:
             f"Saved {len(products)} products to SQLite database: {output_path}"
         )
 
+    def generate_price_distribution(
+        self, products: List[Dict], filename: str = "results/price_distribution.png"
+    ):
+        """
+        Generate a price distribution plot
+        """
+        import matplotlib.pyplot as plt
+        import re
+
+        def clean_price(price_str: str) -> float:
+            """
+            Clean and convert price string to float
+            """
+            # Remove any non-numeric characters except decimal point
+            cleaned_price = re.sub(r"[^\d.]", "", price_str)
+
+            try:
+                return float(cleaned_price)
+            except ValueError:
+                self.logger.warning(f"Could not convert price: {price_str}")
+                return 0.0
+
+        # Ensure results directory exists
+        output_path = Path(filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Extract prices, converting to numeric
+            prices = [clean_price(p["price"]) for p in products]
+            prices = [p / 1000 for p in prices]
+
+            # Remove zero values
+            prices = [p for p in prices if p > 0]
+
+            plt.figure(figsize=(12, 7))
+            plt.hist(prices, bins=30, edgecolor="black", alpha=0.7)
+            plt.title("Laptop Price Distribution in TunisiaNet", fontsize=16)
+            plt.xlabel("Price (DT)", fontsize=12)
+            plt.ylabel("Number of Products", fontsize=12)
+            plt.grid(axis="y", linestyle="--", alpha=0.7)
+
+            # Add some statistical annotations
+            plt.axvline(
+                sum(prices) / len(prices),
+                color="r",
+                linestyle="dashed",
+                linewidth=2,
+                label="Mean Price",
+            )
+
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(str(output_path), dpi=300)
+            plt.close()
+
+            self.logger.info(f"Generated price distribution plot: {output_path}")
+
+        except Exception as e:
+            self.logger.error(
+                f"Error generating price distribution plot: {e}", exc_info=True
+            )
+
     def close(self):
         """
         Close the WebDriver
@@ -367,12 +430,12 @@ def main():
     try:
         products = scraper.scrape_products()
 
-        # Multiple output formats
         scraper.save_to_json(products)
         scraper.save_to_csv(products)
         scraper.save_to_excel(products)
         scraper.generate_markdown_report(products)
         scraper.save_to_sqlite(products)
+        scraper.generate_price_distribution(products)
 
     except Exception as e:
         logging.error(f"Scraping failed: {e}", exc_info=True)
