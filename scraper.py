@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 import os
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -304,6 +305,54 @@ class TunisiaNetScraper:
         except Exception as e:
             self.logger.error(f"Error generating markdown report: {e}", exc_info=True)
 
+    def save_to_sqlite(
+        self, products: List[Dict], filename: str = "results/products.db"
+    ):
+        """
+        Save scraped products to SQLite database
+        """
+        output_path = Path(filename)
+
+        # Connect to SQLite database
+        conn = sqlite3.connect(str(output_path))
+        cursor = conn.cursor()
+
+        # Create table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS products (
+                title TEXT,
+                reference TEXT PRIMARY KEY,
+                description TEXT,
+                price TEXT,
+                availability TEXT,
+                img_url TEXT
+            )
+        """
+        )
+
+        # Insert products
+        for product in products:
+            try:
+                cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO products 
+                    (title, reference, description, price, availability, img_url) 
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                    tuple(product.values()),
+                )
+            except sqlite3.IntegrityError:
+                self.logger.warning(f"Duplicate product: {product['reference']}")
+
+        # Commit and close
+        conn.commit()
+        conn.close()
+
+        self.logger.info(
+            f"Saved {len(products)} products to SQLite database: {output_path}"
+        )
+
     def close(self):
         """
         Close the WebDriver
@@ -323,6 +372,7 @@ def main():
         scraper.save_to_csv(products)
         scraper.save_to_excel(products)
         scraper.generate_markdown_report(products)
+        scraper.save_to_sqlite(products)
 
     except Exception as e:
         logging.error(f"Scraping failed: {e}", exc_info=True)

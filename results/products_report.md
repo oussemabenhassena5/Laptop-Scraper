@@ -2,9 +2,9 @@
 **Total Products Scraped:** 714
 
 ## Price Analysis
-- **Minimum Price:** 319000.0 DT
-- **Maximum Price:** 13559000.0 DT
-- **Average Price:** 2590078.43 DT
+- **Minimum Price:** 319.0 DT
+- **Maximum Price:** 13559.0 DT
+- **Average Price:** 2590.08 DT
 
 ## Product Details
 | Title | Reference | Price | Availability |
