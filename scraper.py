@@ -1,15 +1,39 @@
 import json
 import logging
-from typing import List, Dict
+import os
+from datetime import datetime
 from pathlib import Path
+from typing import Dict, List
 
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
+
+
+def setup_logging():
+    os.makedirs("logs", exist_ok=True)
+
+    # Generate a unique log filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"logs/tunisianet_scraper_{timestamp}.log"
+
+    # Configure logging to write to both file and console
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            # Log to file
+            logging.FileHandler(log_filename, encoding="utf-8"),
+            # Log to console
+            logging.StreamHandler(),
+        ],
+    )
+
+    return log_filename
 
 
 class TunisiaNetScraper:
@@ -23,10 +47,9 @@ class TunisiaNetScraper:
             base_url (str): Base URL for the product category to scrape
         """
         # Set up logging
-        logging.basicConfig(
-            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-        )
         self.logger = logging.getLogger(__name__)
+        self.log_file = setup_logging()
+        self.logger.info(f"Logging to file: {self.log_file}")
 
         # Configure Chrome options
         chrome_options = Options()
@@ -185,12 +208,13 @@ class TunisiaNetScraper:
 
 
 def main():
+    log_file = setup_logging()
     scraper = TunisiaNetScraper()
     try:
         products = scraper.scrape_products()
         scraper.save_to_json(products)
     except Exception as e:
-        logging.error(f"Scraping failed: {e}")
+        logging.error(f"Scraping failed: {e}", exc_info=True)
     finally:
         scraper.close()
 
