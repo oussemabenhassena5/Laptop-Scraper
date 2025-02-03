@@ -1,0 +1,40 @@
+2025-02-03 22:20:20,042 - INFO - Logging to file: logs/tunisianet_scraper_20250203_222020.log
+2025-02-03 22:20:20,042 - INFO - ====== WebDriver manager ======
+2025-02-03 22:20:20,197 - INFO - Get LATEST chromedriver version for google-chrome
+2025-02-03 22:20:20,323 - INFO - Get LATEST chromedriver version for google-chrome
+2025-02-03 22:20:20,435 - INFO - Driver [/Users/macmini/.wdm/drivers/chromedriver/mac64/132.0.6834.159/chromedriver-mac-arm64/chromedriver] found in cache
+2025-02-03 22:20:22,775 - INFO - Scraping 30 pages...
+2025-02-03 22:20:24,296 - INFO - Scraped page 1: 24 products found
+2025-02-03 22:20:26,275 - INFO - Scraped page 2: 24 products found
+2025-02-03 22:20:28,167 - INFO - Scraped page 3: 24 products found
+2025-02-03 22:20:29,953 - INFO - Scraped page 4: 24 products found
+2025-02-03 22:20:31,885 - INFO - Scraped page 5: 24 products found
+2025-02-03 22:20:33,943 - INFO - Scraped page 6: 24 products found
+2025-02-03 22:20:35,792 - INFO - Scraped page 7: 24 products found
+2025-02-03 22:20:37,349 - INFO - Scraped page 8: 24 products found
+2025-02-03 22:20:39,020 - INFO - Scraped page 9: 24 products found
+2025-02-03 22:20:40,581 - INFO - Scraped page 10: 24 products found
+2025-02-03 22:20:42,122 - INFO - Scraped page 11: 24 products found
+2025-02-03 22:20:43,639 - INFO - Scraped page 12: 24 products found
+2025-02-03 22:20:45,082 - INFO - Scraped page 13: 24 products found
+2025-02-03 22:20:46,608 - INFO - Scraped page 14: 24 products found
+2025-02-03 22:20:48,150 - INFO - Scraped page 15: 24 products found
+2025-02-03 22:20:49,718 - INFO - Scraped page 16: 24 products found
+2025-02-03 22:20:51,299 - INFO - Scraped page 17: 24 products found
+2025-02-03 22:20:52,849 - INFO - Scraped page 18: 24 products found
+2025-02-03 22:20:54,437 - INFO - Scraped page 19: 24 products found
+2025-02-03 22:20:55,971 - INFO - Scraped page 20: 24 products found
+2025-02-03 22:20:57,575 - INFO - Scraped page 21: 24 products found
+2025-02-03 22:20:59,075 - INFO - Scraped page 22: 24 products found
+2025-02-03 22:21:00,556 - INFO - Scraped page 23: 24 products found
+2025-02-03 22:21:02,078 - INFO - Scraped page 24: 24 products found
+2025-02-03 22:21:03,488 - INFO - Scraped page 25: 24 products found
+2025-02-03 22:21:04,982 - INFO - Scraped page 26: 24 products found
+2025-02-03 22:21:06,480 - INFO - Scraped page 27: 24 products found
+2025-02-03 22:21:08,076 - INFO - Scraped page 28: 24 products found
+2025-02-03 22:21:09,683 - INFO - Scraped page 29: 24 products found
+2025-02-03 22:21:10,876 - INFO - Scraped page 30: 18 products found
+2025-02-03 22:21:10,880 - INFO - Saved 714 products to results/products.json
+2025-02-03 22:21:10,885 - INFO - Saved 714 products to CSV: results/products.csv
+2025-02-03 22:21:10,978 - INFO - Saved 714 products to Excel: results/products.xlsx
+2025-02-03 22:21:10,979 - INFO - Generated markdown report: results/products_report.md

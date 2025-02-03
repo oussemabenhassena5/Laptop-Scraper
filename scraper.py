@@ -247,6 +247,63 @@ class TunisiaNetScraper:
 
         self.logger.info(f"Saved {len(products)} products to Excel: {output_path}")
 
+    def generate_markdown_report(
+        self, products: List[Dict], filename: str = "results/products_report.md"
+    ):
+        """
+        Generate a markdown report of scraped products
+        """
+        output_path = Path(filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        def clean_price(price_str: str) -> float:
+            """
+            Clean and convert price string to float
+            """
+            # Remove any non-numeric characters except decimal point
+            import re
+
+            cleaned_price = re.sub(r"[^\d.]", "", price_str)
+
+            try:
+                return float(cleaned_price)
+            except ValueError:
+                self.logger.warning(f"Could not convert price: {price_str}")
+                return 0.0
+
+        try:
+            # Clean price conversion
+            prices = [clean_price(p["price"]) for p in products]
+            prices = [p / 1000 for p in prices]
+
+            with output_path.open("w", encoding="utf-8") as f:
+                # Report header
+                f.write("# TunisiaNet Laptop Scraping Report\n")
+                f.write(f"**Total Products Scraped:** {len(products)}\n\n")
+
+                # Price statistics
+                f.write("## Price Analysis\n")
+                f.write(f"- **Minimum Price:** {min(prices) } DT\n")
+                f.write(f"- **Maximum Price:** {max(prices)} DT\n")
+                f.write(f"- **Average Price:** {sum(prices)/len(prices):.2f} DT\n\n")
+
+                # Product table
+                f.write("## Product Details\n")
+                f.write("| Title | Reference | Price | Availability |\n")
+                f.write("|-------|-----------|-------|-------------|\n")
+
+                for product in products[:50]:  # Limit to first 50 products
+                    # Escape pipe characters in title to prevent markdown table breaking
+                    safe_title = product["title"].replace("|", "\\|")
+                    f.write(
+                        f"| {safe_title} | {product['reference']} | {product['price']} | {product['availability']} |\n"
+                    )
+
+            self.logger.info(f"Generated markdown report: {output_path}")
+
+        except Exception as e:
+            self.logger.error(f"Error generating markdown report: {e}", exc_info=True)
+
     def close(self):
         """
         Close the WebDriver
@@ -265,6 +322,7 @@ def main():
         scraper.save_to_json(products)
         scraper.save_to_csv(products)
         scraper.save_to_excel(products)
+        scraper.generate_markdown_report(products)
 
     except Exception as e:
         logging.error(f"Scraping failed: {e}", exc_info=True)
