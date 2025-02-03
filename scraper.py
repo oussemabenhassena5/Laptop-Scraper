@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 import os
@@ -5,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,7 +14,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-import csv
 
 
 def setup_logging():
@@ -63,29 +64,6 @@ class TunisiaNetScraper:
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
 
         self.base_url = base_url
-
-    def save_to_csv(self, products: List[Dict], filename: str = "products.csv"):
-        """
-        Save scraped products to CSV file
-        """
-        output_path = Path(filename)
-
-        # Define CSV headers
-        headers = [
-            "title",
-            "reference",
-            "description",
-            "price",
-            "availability",
-            "img_url",
-        ]
-
-        with output_path.open("w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=headers)
-            writer.writeheader()
-            writer.writerows(products)
-
-        self.logger.info(f"Saved {len(products)} products to CSV: {output_path}")
 
     def _find_elements(self, by: By, value: str) -> List:
         """
@@ -208,7 +186,9 @@ class TunisiaNetScraper:
 
         return all_products
 
-    def save_to_json(self, products: List[Dict], filename: str = "products.json"):
+    def save_to_json(
+        self, products: List[Dict], filename: str = "results/products.json"
+    ):
         """
         Save scraped products to JSON file
 
@@ -222,6 +202,50 @@ class TunisiaNetScraper:
             json.dump(products, f, ensure_ascii=False, indent=4)
 
         self.logger.info(f"Saved {len(products)} products to {output_path}")
+
+    def save_to_csv(self, products: List[Dict], filename: str = "results/products.csv"):
+        """
+        Save scraped products to CSV file
+        """
+        output_path = Path(filename)
+
+        # Define CSV headers
+        headers = [
+            "title",
+            "reference",
+            "description",
+            "price",
+            "availability",
+            "img_url",
+        ]
+
+        with output_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            writer.writerows(products)
+
+        self.logger.info(f"Saved {len(products)} products to CSV: {output_path}")
+
+    def save_to_excel(
+        self, products: List[Dict], filename: str = "results/products.xlsx"
+    ):
+        """
+        Save scraped products to Excel file
+        """
+        df = pd.DataFrame(products)
+        output_path = Path(filename)
+
+        # Save to Excel with some styling
+        with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Products")
+
+            # Auto-adjust columns
+            worksheet = writer.sheets["Products"]
+            for i, col in enumerate(df.columns):
+                column_len = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                worksheet.column_dimensions[chr(65 + i)].width = column_len
+
+        self.logger.info(f"Saved {len(products)} products to Excel: {output_path}")
 
     def close(self):
         """
@@ -240,6 +264,7 @@ def main():
         # Multiple output formats
         scraper.save_to_json(products)
         scraper.save_to_csv(products)
+        scraper.save_to_excel(products)
 
     except Exception as e:
         logging.error(f"Scraping failed: {e}", exc_info=True)

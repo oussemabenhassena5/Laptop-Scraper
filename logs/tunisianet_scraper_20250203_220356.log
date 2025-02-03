@@ -1,0 +1,49 @@
+2025-02-03 22:03:56,150 - INFO - Logging to file: logs/tunisianet_scraper_20250203_220356.log
+2025-02-03 22:03:56,150 - INFO - ====== WebDriver manager ======
+2025-02-03 22:03:56,300 - INFO - Get LATEST chromedriver version for google-chrome
+2025-02-03 22:03:56,423 - INFO - Get LATEST chromedriver version for google-chrome
+2025-02-03 22:03:56,538 - INFO - Driver [/Users/macmini/.wdm/drivers/chromedriver/mac64/132.0.6834.159/chromedriver-mac-arm64/chromedriver] found in cache
+2025-02-03 22:03:58,572 - INFO - Scraping 30 pages...
+2025-02-03 22:04:00,062 - INFO - Scraped page 1: 24 products found
+2025-02-03 22:04:01,514 - INFO - Scraped page 2: 24 products found
+2025-02-03 22:04:02,887 - INFO - Scraped page 3: 24 products found
+2025-02-03 22:04:04,253 - INFO - Scraped page 4: 24 products found
+2025-02-03 22:04:05,642 - INFO - Scraped page 5: 24 products found
+2025-02-03 22:04:07,033 - INFO - Scraped page 6: 24 products found
+2025-02-03 22:04:08,530 - INFO - Scraped page 7: 24 products found
+2025-02-03 22:04:09,913 - INFO - Scraped page 8: 24 products found
+2025-02-03 22:04:11,310 - INFO - Scraped page 9: 24 products found
+2025-02-03 22:04:12,749 - INFO - Scraped page 10: 24 products found
+2025-02-03 22:04:14,127 - INFO - Scraped page 11: 24 products found
+2025-02-03 22:04:15,704 - INFO - Scraped page 12: 24 products found
+2025-02-03 22:04:17,070 - INFO - Scraped page 13: 24 products found
+2025-02-03 22:04:18,635 - INFO - Scraped page 14: 24 products found
+2025-02-03 22:04:20,151 - INFO - Scraped page 15: 24 products found
+2025-02-03 22:04:21,588 - INFO - Scraped page 16: 24 products found
+2025-02-03 22:04:23,082 - INFO - Scraped page 17: 24 products found
+2025-02-03 22:04:24,517 - INFO - Scraped page 18: 24 products found
+2025-02-03 22:04:26,267 - INFO - Scraped page 19: 24 products found
+2025-02-03 22:04:27,671 - INFO - Scraped page 20: 24 products found
+2025-02-03 22:04:29,218 - INFO - Scraped page 21: 24 products found
+2025-02-03 22:04:30,742 - INFO - Scraped page 22: 24 products found
+2025-02-03 22:04:32,163 - INFO - Scraped page 23: 24 products found
+2025-02-03 22:04:33,739 - INFO - Scraped page 24: 24 products found
+2025-02-03 22:04:35,282 - INFO - Scraped page 25: 24 products found
+2025-02-03 22:04:36,944 - INFO - Scraped page 26: 24 products found
+2025-02-03 22:04:38,875 - INFO - Scraped page 27: 24 products found
+2025-02-03 22:04:40,728 - INFO - Scraped page 28: 24 products found
+2025-02-03 22:04:42,505 - INFO - Scraped page 29: 24 products found
+2025-02-03 22:04:44,118 - INFO - Scraped page 30: 18 products found
+2025-02-03 22:04:44,122 - INFO - Saved 714 products to results/products.json
+2025-02-03 22:04:44,127 - INFO - Saved 714 products to CSV: results/products.csv
+2025-02-03 22:04:44,129 - ERROR - Scraping failed: No module named 'openpyxl'
+Traceback (most recent call last):
+  File "/Users/macmini/Desktop/personal/Laptop-Scraper/scraper.py", line 267, in main
+    scraper.save_to_excel(products)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/macmini/Desktop/personal/Laptop-Scraper/scraper.py", line 239, in save_to_excel
+    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/macmini/Desktop/personal/Laptop-Scraper/venv/lib/python3.13/site-packages/pandas/io/excel/_openpyxl.py", line 57, in __init__
+    from openpyxl.workbook import Workbook
+ModuleNotFoundError: No module named 'openpyxl'
