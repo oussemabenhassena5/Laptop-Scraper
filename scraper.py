@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
+import csv
 
 
 def setup_logging():
@@ -62,6 +63,29 @@ class TunisiaNetScraper:
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
 
         self.base_url = base_url
+
+    def save_to_csv(self, products: List[Dict], filename: str = "products.csv"):
+        """
+        Save scraped products to CSV file
+        """
+        output_path = Path(filename)
+
+        # Define CSV headers
+        headers = [
+            "title",
+            "reference",
+            "description",
+            "price",
+            "availability",
+            "img_url",
+        ]
+
+        with output_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            writer.writerows(products)
+
+        self.logger.info(f"Saved {len(products)} products to CSV: {output_path}")
 
     def _find_elements(self, by: By, value: str) -> List:
         """
@@ -212,7 +236,11 @@ def main():
     scraper = TunisiaNetScraper()
     try:
         products = scraper.scrape_products()
+
+        # Multiple output formats
         scraper.save_to_json(products)
+        scraper.save_to_csv(products)
+
     except Exception as e:
         logging.error(f"Scraping failed: {e}", exc_info=True)
     finally:
