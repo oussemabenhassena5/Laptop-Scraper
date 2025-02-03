@@ -1,103 +1,199 @@
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 import json
+import logging
+from typing import List, Dict
+from pathlib import Path
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 
-driver = webdriver.Chrome()
+class TunisiaNetScraper:
+    def __init__(
+        self, base_url: str = "https://www.tunisianet.com.tn/702-ordinateur-portable"
+    ):
+        """
+        Initialize the web scraper with Chrome WebDriver
+
+        Args:
+            base_url (str): Base URL for the product category to scrape
+        """
+        # Set up logging
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
+        self.logger = logging.getLogger(__name__)
+
+        # Configure Chrome options
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run in background
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+
+        # Set up WebDriver with automatic driver management
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        self.base_url = base_url
+
+    def _find_elements(self, by: By, value: str) -> List:
+        """
+        Wrapper method to find elements with explicit wait
+
+        Args:
+            by (By): Selenium By locator
+            value (str): Locator value
+
+        Returns:
+            List of found WebElements
+        """
+        try:
+            return WebDriverWait(self.driver, 10).until(
+                EC.presence_of_all_elements_located((by, value))
+            )
+        except Exception as e:
+            self.logger.error(f"Error finding elements: {e}")
+            return []
+
+    def _extract_text(self, elements: List, filter_empty: bool = True) -> List[str]:
+        """
+        Extract text from WebElements
+
+        Args:
+            elements (List): List of WebElements
+            filter_empty (bool): Remove empty strings
+
+        Returns:
+            List of extracted text
+        """
+        texts = [elem.text.strip() for elem in elements]
+        return [text for text in texts if text] if filter_empty else texts
+
+    def _extract_attribute(self, elements: List, attribute: str) -> List[str]:
+        """
+        Extract specific attribute from WebElements
+
+        Args:
+            elements (List): List of WebElements
+            attribute (str): Attribute to extract
+
+        Returns:
+            List of extracted attribute values
+        """
+        return [elem.get_attribute(attribute) for elem in elements]
+
+    def get_total_pages(self) -> int:
+        """
+        Get total number of pages for pagination
+
+        Returns:
+            int: Total number of pages
+        """
+        self.driver.get(self.base_url)
+        page_links = self._find_elements(By.CLASS_NAME, "js-search-link")
+
+        try:
+            return int(page_links[-2].text) if page_links else 1
+        except (IndexError, ValueError) as e:
+            self.logger.warning(f"Could not determine total pages: {e}")
+            return 1
+
+    def scrape_products(self) -> List[Dict]:
+        """
+        Scrape all products across pages
+
+        Returns:
+            List of product dictionaries
+        """
+        all_products = []
+        total_pages = self.get_total_pages()
+
+        self.logger.info(f"Scraping {total_pages} pages...")
+
+        for page in range(1, total_pages + 1):
+            page_url = f"{self.base_url}?order=product.price.asc&page={page}"
+            self.driver.get(page_url)
+
+            # Extract product details
+            titles = self._extract_text(
+                self._find_elements(By.CLASS_NAME, "product-title")
+            )
+            references = self._extract_text(
+                self._find_elements(By.CLASS_NAME, "product-reference")
+            )
+            descriptions = self._extract_text(
+                self._find_elements(By.CLASS_NAME, "listds")
+            )
+            prices = self._extract_text(self._find_elements(By.CLASS_NAME, "price"))
+            availabilities = self._extract_text(
+                self._find_elements(By.ID, "stock_availability")
+            )
+            img_urls = self._extract_attribute(
+                self._find_elements(By.CSS_SELECTOR, "img.center-block"), "src"
+            )
+
+            # Combine data
+            for i in range(
+                min(
+                    len(titles),
+                    len(references),
+                    len(descriptions),
+                    len(prices),
+                    len(availabilities),
+                    len(img_urls),
+                )
+            ):
+                product = {
+                    "title": titles[i],
+                    "reference": references[i],
+                    "description": descriptions[i],
+                    "price": prices[i],
+                    "availability": availabilities[i],
+                    "img_url": img_urls[i],
+                }
+                all_products.append(product)
+
+            self.logger.info(f"Scraped page {page}: {len(titles)} products found")
+
+        return all_products
+
+    def save_to_json(self, products: List[Dict], filename: str = "products.json"):
+        """
+        Save scraped products to JSON file
+
+        Args:
+            products (List[Dict]): List of product dictionaries
+            filename (str): Output filename
+        """
+        output_path = Path(filename)
+
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(products, f, ensure_ascii=False, indent=4)
+
+        self.logger.info(f"Saved {len(products)} products to {output_path}")
+
+    def close(self):
+        """
+        Close the WebDriver
+        """
+        if self.driver:
+            self.driver.quit()
 
 
-def get_titles(page_url):
-    driver.get(page_url)
-    titles = driver.find_elements(By.CLASS_NAME, "product-title")
-
-    titles_list = []
-    for i in range(len(titles)):
-        titles_list.append(titles[i].text)
-    return titles_list
-
-
-def get_references(page_url):
-    driver.get(page_url)
-    references = driver.find_elements(By.CLASS_NAME, "product-reference")
-
-    references_list = []
-    for i in range(len(references)):
-        references_list.append(references[i].text)
-    return references_list
+def main():
+    scraper = TunisiaNetScraper()
+    try:
+        products = scraper.scrape_products()
+        scraper.save_to_json(products)
+    except Exception as e:
+        logging.error(f"Scraping failed: {e}")
+    finally:
+        scraper.close()
 
 
-def get_descriptions(page_url):
-    driver.get(page_url)
-    descriptions = driver.find_elements(By.CLASS_NAME, "listds")
-
-    descriptions_list = []
-    for i in range(len(descriptions)):
-        descriptions_list.append(descriptions[i].text)
-    return descriptions_list
-
-
-def get_prices(page_url):
-    driver.get(page_url)
-    prices = driver.find_elements(By.CLASS_NAME, "price")
-
-    prices_list = []
-    for i in range(len(prices)):
-        prices_list.append(prices[i].text)
-        new_list = [x for x in prices_list if x != ""]
-    return new_list
-
-
-def get_availabilities(page_url):
-    driver.get(page_url)
-    availabilities = driver.find_elements(By.ID, "stock_availability")
-
-    availabilities_list = []
-    for i in range(len(availabilities)):
-        availabilities_list.append(availabilities[i].text)
-        new_list = [x for x in availabilities_list if x != ""]
-    return new_list
-
-
-def get_imgs(page_url):
-    driver.get(page_url)
-    imgs = driver.find_elements(By.CSS_SELECTOR, "img.center-block")
-    imgs_list = []
-    for img in imgs:
-        imgs_list.append(img.get_attribute("src"))
-    return imgs_list
-
-
-driver.get("https://www.tunisianet.com.tn/702-ordinateur-portable")
-n_pages = int(driver.find_elements(By.CLASS_NAME, "js-search-link")[-2].text)
-
-
-for i in range(1, n_pages + 1):
-    link = (
-        "https://www.tunisianet.com.tn/702-ordinateur-portable?order=product.price.asc&page="
-        + str(i)
-    )
-    titles = get_titles(link)
-    references = get_references(link)
-    descriptions = get_descriptions(link)
-    prices = get_prices(link)
-    availabilities = get_availabilities(link)
-    imgs = get_imgs(link)
-
-
-all_products = []
-for i in range(len(titles)):
-    dictionnary = {
-        "title": str(titles[i]),
-        "reference": str(references[i]),
-        "description": str(descriptions[i]),
-        "price": str(prices[i]),
-        "availability": str(availabilities[i]),
-        "imgs": str(imgs[i]),
-    }
-    all_products.append(dictionnary)
-
-
-json_object = json.dumps(all_products, indent=4)
-with open("products.json", "a+") as products:
-    products.write(json_object)
+if __name__ == "__main__":
+    main()
